@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="ru.annaalkh.springproxy.introductions" />
+
+    <bean name="baseLetterSender1" class="ru.annaalkh.springproxy.introductions.BaseLetterSender"></bean>
+    <bean name="baseLetterSender2" class="ru.annaalkh.springproxy.introductions.BaseLetterSender"></bean>
+    <bean name="iPhoneLetterSender" class="ru.annaalkh.springproxy.introductions.IPhoneLetterSender"></bean>
+
+    <bean name="signerMixin" class="ru.annaalkh.springproxy.introductions.SignerMixin"  >
+        <property name="signature" value="&#xA;My custom signature" />
+    </bean>
+
+    <bean name="signerAdvisor" class="org.springframework.aop.support.DefaultIntroductionAdvisor" scope="prototype">
+        <constructor-arg>
+            <ref bean="signerMixin" />
+        </constructor-arg>
+    </bean>
+
+    <bean id="baseLetterSender2Signed" class="org.springframework.aop.framework.ProxyFactoryBean" >
+        <property name="proxyInterfaces" value="ru.annaalkh.springproxy.introductions.LetterSender"/>
+        <property name="target">
+            <ref bean="baseLetterSender2" />
+        </property>
+        <property name="interceptorNames">
+            <list>
+                <value>signerAdvisor</value>
+            </list>
+        </property>
+    </bean>
+
+
+    <bean id="letterManager" class="ru.annaalkh.springproxy.introductions.LetterManager">
+        <property name="letterSenders">
+            <list>
+                <ref bean="baseLetterSender1" />
+                <ref bean="baseLetterSender2Signed" />
+                <ref bean="iPhoneLetterSender" />
+            </list>
+        </property>
+    </bean>
+
+
+</beans>
